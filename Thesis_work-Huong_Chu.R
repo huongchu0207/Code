@@ -246,124 +246,7 @@ for (i in c(17, 18)){
   print(mcnemar.test(table_pop, correct = FALSE))
   print("---------------------------------------------")
 }
-###############################################################################
-####    TABLE 3 - PRE AND POST SURVEY FREQUENCY - REVIEWERS' COMMENT       ####
-###############################################################################
-mother_child_gender <- unique(mother_data[, .(dinner_id, study_id, child_report_gender)])
-mother_child_gender_1 <- data.frame(mother_child_gender) %>% na.omit() %>% 
-  pivot_wider(names_from = child_report_gender,values_from = child_report_gender) %>% rename(males = `1`, females = `2`)
-mother_child_gender_1 <- data.table(mother_child_gender_1)
 
-mother_pre_post_gender <- mother_data[, c(3,4,54:89)]
-unique(mother_child_gender_1)
-unique(mother_pre_post_gender)
-all <- merge(mother_pre_post_gender, mother_child_gender_1)
-#all <- unique(all[,.(dinner_id, study_id, vacc_6mo_doctor_pre, vacc_6m_get_pre, vacc_6mo_doctor_post, vacc_6m_get_post, females, males)])
-all1 <- unique(all)
-
-females_only <- all1[(!is.na(females)) & (is.na(males))]
-females_only1 <- females_only[,males := NULL]
-males_only <- all1[(is.na(females)) & (!is.na(males))]
-males_only1 <- males_only[,females := NULL]
-
-#intention_pre <- females_only1[complete.cases(females_only1)]
-#intention_pre <- males_only1[complete.cases(males_only1)]
-
-# SUBSET DATA
-mother_pre      <- females_only1[, 3:20]
-mother_post     <- females_only1[, 21:38]
-
-mother_pre      <- males_only1[, 3:20]
-mother_post     <- males_only1[, 21:38]
-# N & FREQUENCY
-for (i in c(8,9,16,17,18)){
-  print(paste0("question: ", var_lab(mother_pre[, i, with=F])))
-  print(stack(attr(data.frame(mother_pre)[, i], 'labels')))
-  
-  merge_pre_post <- data.table(pre=mother_pre[, i, with=F], post=mother_post[, i, with=F])
-  merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
-  setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
-  
-  print(merge_pre_post[order(pre), .(pre_n=.N, pre_prop=round((.N)/nrow(merge_pre_post)*100, 1)), by=pre])
-  print(merge_pre_post[order(post), .(post_n=.N, post_prop=round((.N)/nrow(merge_pre_post)*100, 1)), by=post])
-  print("---------------------------------------------")
-}
-# McNemar TEST - PAIRED
-
-# QUESTION 1,3,4,5,8,10,12,14,15
-
-for (i in 8){
-  print(paste0("question: ", var_lab(mother_pre[, i, with=F])))
-  
-  # merge identical pre and post question
-  merge_pre_post <- data.table(pre=mother_pre[, i, with=F], post=mother_post[, i, with=F])
-  merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
-  setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
-  
-  ##combine "not sure" with "false"
-  merge_pre_post[pre == 3, pre := 2]
-  merge_pre_post[post == 3, post := 2]
-  
-  table_pop = table(merge_pre_post$post, merge_pre_post$pre)
-  print(mcnemar.test(table_pop, correct = FALSE))
-  print("---------------------------------------------")
-}
-
-# QUESTION 2,6,7,9,11
-
-for (i in 9){
-  print(paste0("question: ", var_lab(mother_pre[, i, with=F])))
-  
-  # merge identical pre and post question
-  merge_pre_post <- data.table(pre=mother_pre[, i, with=F], post=mother_post[, i, with=F])
-  merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
-  setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
-  
-  ##combine "not sure" with "true"
-  merge_pre_post[pre == 3, pre := 1]
-  merge_pre_post[post == 3, post := 1]
-  
-  table_pop = table(merge_pre_post$post, merge_pre_post$pre)
-  print(mcnemar.test(table_pop, correct = FALSE))
-  print("---------------------------------------------")
-}
-
-# QUESTION 16
-
-paste0("question: ", var_lab(mother_pre$vacc_get_feel_pre))
-# merge identical pre and post question
-merge_pre_post <- data.table(pre=mother_pre$vacc_get_feel_pre, post=mother_post$vacc_get_feel_post)
-merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
-setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
-
-##combine "not sure", "undecided" with "do not want him/her to get the vaccine"
-merge_pre_post[pre %in% c(3,4), pre := 2]
-merge_pre_post[post %in% c(3,4), post := 2]
-
-table_pop = table(merge_pre_post$post, merge_pre_post$pre)
-print(mcnemar.test(table_pop, correct = FALSE))
-print("---------------------------------------------")
-
-# QUESTION 17, 18
-
-for (i in 18){
-  print(paste0("question: ", var_lab(mother_pre[, i, with=F])))
-  
-  # merge identical pre and post question
-  merge_pre_post <- data.table(pre=mother_pre[, i, with=F], post=mother_post[, i, with=F])
-  merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
-  setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
-  
-  ##combine "somewhat likely" with "very likely" / "not likely" with "not sure"
-  merge_pre_post[pre == 2, pre := 1]
-  merge_pre_post[pre %in% c(3,4), pre := 2]
-  merge_pre_post[post == 2, post := 1]
-  merge_pre_post[post %in% c(3,4), post := 2]
-  
-  table_pop = table(merge_pre_post$post, merge_pre_post$pre)
-  print(mcnemar.test(table_pop, correct = FALSE))
-  print("---------------------------------------------")
-}
 ###############################################################################
 ####                         TABLE 4 - MEAN & SD                           ####
 ###############################################################################
@@ -679,7 +562,129 @@ ggplot(data = merge_mean_sd, aes(x=id, y=prop, color = name_ques)) + geom_line(s
         legend.text = element_text(size=12), legend.title = element_text(size=14),
         plot.title = element_text(hjust = 0.5, size = 20))
 
+##############################################################################################################################
+#################                                  REVIEWERS' COMMENT                                        #################
+##############################################################################################################################
 
+
+###############################################################################
+####    TABLE 3 - PRE AND POST SURVEY FREQUENCY - REVIEWERS' COMMENT       ####
+###############################################################################
+mother_child_gender <- unique(mother_data[, .(dinner_id, study_id, child_report_gender)])
+mother_child_gender_1 <- data.frame(mother_child_gender) %>% na.omit() %>% 
+  pivot_wider(names_from = child_report_gender,values_from = child_report_gender) %>% rename(males = `1`, females = `2`)
+mother_child_gender_1 <- data.table(mother_child_gender_1)
+
+mother_pre_post_gender <- mother_data[, c(3,4,54:89)]
+unique(mother_child_gender_1)
+unique(mother_pre_post_gender)
+all <- merge(mother_pre_post_gender, mother_child_gender_1)
+#all <- unique(all[,.(dinner_id, study_id, vacc_6mo_doctor_pre, vacc_6m_get_pre, vacc_6mo_doctor_post, vacc_6m_get_post, females, males)])
+all1 <- unique(all)
+
+females_only <- all1[(!is.na(females)) & (is.na(males))]
+females_only1 <- females_only[,males := NULL]
+males_only <- all1[(is.na(females)) & (!is.na(males))]
+males_only1 <- males_only[,females := NULL]
+
+#intention_pre <- females_only1[complete.cases(females_only1)]
+#intention_pre <- males_only1[complete.cases(males_only1)]
+
+# SUBSET DATA
+mother_pre      <- females_only1[, 3:20]
+mother_post     <- females_only1[, 21:38]
+
+mother_pre      <- males_only1[, 3:20]
+mother_post     <- males_only1[, 21:38]
+# N & FREQUENCY
+for (i in c(8,9,16,17,18)){
+  print(paste0("question: ", var_lab(mother_pre[, i, with=F])))
+  print(stack(attr(data.frame(mother_pre)[, i], 'labels')))
+  
+  merge_pre_post <- data.table(pre=mother_pre[, i, with=F], post=mother_post[, i, with=F])
+  merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
+  setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
+  
+  print(merge_pre_post[order(pre), .(pre_n=.N, pre_prop=round((.N)/nrow(merge_pre_post)*100, 1)), by=pre])
+  print(merge_pre_post[order(post), .(post_n=.N, post_prop=round((.N)/nrow(merge_pre_post)*100, 1)), by=post])
+  print("---------------------------------------------")
+}
+# McNemar TEST - PAIRED
+
+# QUESTION 1,3,4,5,8,10,12,14,15
+
+for (i in 8){
+  print(paste0("question: ", var_lab(mother_pre[, i, with=F])))
+  
+  # merge identical pre and post question
+  merge_pre_post <- data.table(pre=mother_pre[, i, with=F], post=mother_post[, i, with=F])
+  merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
+  setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
+  
+  ##combine "not sure" with "false"
+  merge_pre_post[pre == 3, pre := 2]
+  merge_pre_post[post == 3, post := 2]
+  
+  table_pop = table(merge_pre_post$post, merge_pre_post$pre)
+  print(mcnemar.test(table_pop, correct = FALSE))
+  print("---------------------------------------------")
+}
+
+# QUESTION 2,6,7,9,11
+
+for (i in 9){
+  print(paste0("question: ", var_lab(mother_pre[, i, with=F])))
+  
+  # merge identical pre and post question
+  merge_pre_post <- data.table(pre=mother_pre[, i, with=F], post=mother_post[, i, with=F])
+  merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
+  setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
+  
+  ##combine "not sure" with "true"
+  merge_pre_post[pre == 3, pre := 1]
+  merge_pre_post[post == 3, post := 1]
+  
+  table_pop = table(merge_pre_post$post, merge_pre_post$pre)
+  print(mcnemar.test(table_pop, correct = FALSE))
+  print("---------------------------------------------")
+}
+
+# QUESTION 16
+
+paste0("question: ", var_lab(mother_pre$vacc_get_feel_pre))
+# merge identical pre and post question
+merge_pre_post <- data.table(pre=mother_pre$vacc_get_feel_pre, post=mother_post$vacc_get_feel_post)
+merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
+setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
+
+##combine "not sure", "undecided" with "do not want him/her to get the vaccine"
+merge_pre_post[pre %in% c(3,4), pre := 2]
+merge_pre_post[post %in% c(3,4), post := 2]
+
+table_pop = table(merge_pre_post$post, merge_pre_post$pre)
+print(mcnemar.test(table_pop, correct = FALSE))
+print("---------------------------------------------")
+
+# QUESTION 17, 18
+
+for (i in 18){
+  print(paste0("question: ", var_lab(mother_pre[, i, with=F])))
+  
+  # merge identical pre and post question
+  merge_pre_post <- data.table(pre=mother_pre[, i, with=F], post=mother_post[, i, with=F])
+  merge_pre_post <- merge_pre_post[complete.cases(merge_pre_post)]
+  setnames(merge_pre_post, old=names(merge_pre_post), new=c("pre", "post"))
+  
+  ##combine "somewhat likely" with "very likely" / "not likely" with "not sure"
+  merge_pre_post[pre == 2, pre := 1]
+  merge_pre_post[pre %in% c(3,4), pre := 2]
+  merge_pre_post[post == 2, post := 1]
+  merge_pre_post[post %in% c(3,4), post := 2]
+  
+  table_pop = table(merge_pre_post$post, merge_pre_post$pre)
+  print(mcnemar.test(table_pop, correct = FALSE))
+  print("---------------------------------------------")
+}
 ###############################################################################
 ####                                 MAJOR 3                               ####
 ###############################################################################
